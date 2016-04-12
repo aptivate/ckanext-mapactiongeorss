@@ -18,9 +18,6 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
         url = toolkit.url_for(controller='feed', action='general')
         response = self.app.get(url, status=[200])
 
-        import ipdb
-        ipdb.set_trace()
-
         et = fromstring(response.body)
         namespace = '{http://www.w3.org/2005/Atom}'
         path = '{namespace}entry/{namespace}title'.format(namespace=namespace)

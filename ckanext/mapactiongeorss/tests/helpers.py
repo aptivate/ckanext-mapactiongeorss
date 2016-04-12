@@ -1,4 +1,6 @@
+import ckan.config.middleware
 import pylons.config as config
+import webtest
 
 import ckan.tests.helpers as helpers
 
@@ -8,7 +10,20 @@ class FunctionalTestBaseClass(helpers.FunctionalTestBase):
     def setup_class(cls):
         super(FunctionalTestBaseClass, cls).setup_class()
         _load_plugin('mapactiongeorss')
-        cls.app = super(FunctionalTestBaseClass, cls)._get_test_app()
+        cls.app = _get_test_app()
+
+
+def _get_test_app():
+    '''Return a webtest.TestApp for CKAN, with legacy templates disabled.
+
+    For functional tests that need to request CKAN pages or post to the API.
+    Unit tests shouldn't need this.
+
+    '''
+    config['ckan.legacy_templates'] = False
+    app = ckan.config.middleware.make_app(config['global_conf'], **config)
+    app = webtest.TestApp(app)
+    return app
 
 
 def _load_plugin(plugin):

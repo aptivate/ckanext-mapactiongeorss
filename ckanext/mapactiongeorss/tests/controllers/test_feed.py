@@ -21,18 +21,18 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
         response = self.app.get(url, status=[200])
 
         et = fromstring(response.body)
-        namespace = '{http://www.w3.org/2005/Atom}'
-        path = '{namespace}entry/{namespace}title'.format(namespace=namespace)
-        title = et.find(path).text
+        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom'}
+        path = 'xmlns:entry/xmlns:title'
+        title = et.find(path, namespaces=namespaces).text
 
         assert_equals(title, dataset['title'])
 
     def test_feed_contains_coordinates(self):
         metadata = {
-            'xmin': '-506691.09',
-            'xmax': '1493308.91',
-            'ymin': '208909.14',
-            'ymax': '1268909.14',
+            'ymin': '-2373790',
+            'xmin': '2937940',
+            'ymax': '-1681290',
+            'xmax': '3567770',
         }
 
         extras = [
@@ -46,11 +46,16 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
         response = self.app.get(url, status=[200])
 
         et = fromstring(response.body)
-        namespace = '{http://www.w3.org/2005/Atom}'
-        path = '{namespace}entry/{namespace}georss:box'.format(
-            namespace=namespace)
-        box = et.find(path).text
+        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',
+                      'georss': 'http://www.georss.org/georss'}
+        path = 'xmlns:entry/georss:box'
 
-        expected_box = '{xmin} {ymin} {xmax} {ymax}'.format(
-            **metadata)
+        box = et.find(path, namespaces=namespaces).text
+
+        expected_values = {k: float(metadata[k])
+                           for (k, v) in metadata.items()}
+
+        expected_box = '{ymin:f} {xmin:f} {ymax:f} {xmax:f}'.format(
+            **expected_values)
+
         assert_equals(box, expected_box)

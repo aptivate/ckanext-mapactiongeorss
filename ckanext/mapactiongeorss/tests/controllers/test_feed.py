@@ -17,13 +17,7 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
     def test_feed_contains_dataset(self):
         dataset = factories.Dataset()
 
-        url = toolkit.url_for('mapaction_georss')
-        response = self.app.get(url, status=[200])
-
-        et = fromstring(response.body)
-        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom'}
-        path = 'xmlns:entry/xmlns:title'
-        title = et.find(path, namespaces=namespaces).text
+        title = self._find_in_rss('xmlns:entry/xmlns:title').text
 
         assert_equals(title, dataset['title'])
 
@@ -42,15 +36,7 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
 
         factories.Dataset(extras=extras)
 
-        url = toolkit.url_for('mapaction_georss')
-        response = self.app.get(url, status=[200])
-
-        et = fromstring(response.body)
-        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',
-                      'georss': 'http://www.georss.org/georss'}
-        path = 'xmlns:entry/georss:box'
-
-        box = et.find(path, namespaces=namespaces).text
+        box = self._find_in_rss('xmlns:entry/georss:box').text
 
         expected_values = {k: float(metadata[k])
                            for (k, v) in metadata.items()}
@@ -59,3 +45,13 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
             **expected_values)
 
         assert_equals(box, expected_box)
+
+    def _find_in_rss(self, path):
+        url = toolkit.url_for('mapaction_georss')
+        response = self.app.get(url, status=[200])
+
+        et = fromstring(response.body)
+        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',
+                      'georss': 'http://www.georss.org/georss'}
+
+        return et.find(path, namespaces=namespaces)

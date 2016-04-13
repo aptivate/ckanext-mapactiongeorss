@@ -21,7 +21,7 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
 
         assert_equals(title, dataset['title'])
 
-    def test_feed_contains_coordinates(self):
+    def test_feed_contains_box(self):
         metadata = {
             'ymin': '-2373790',
             'xmin': '2937940',
@@ -45,6 +45,30 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
             **expected_values)
 
         assert_equals(box, expected_box)
+
+    def test_feed_contains_point(self):
+        metadata = {
+            'ymin': '-2373790',
+            'xmin': '2937940',
+            'ymax': '-1681290',
+            'xmax': '3567770',
+        }
+
+        extras = [
+            {'key': k, 'value': v} for (k, v) in
+            metadata.items()
+        ]
+
+        factories.Dataset(extras=extras)
+
+        point = self._find_in_rss('xmlns:entry/georss:point').text
+
+        expected_point = '{y:f} {x:f}'.format(
+            y=(float(metadata['ymin']) + float(metadata['ymax'])) / 2,
+            x=(float(metadata['xmin']) + float(metadata['xmax'])) / 2,
+        )
+
+        assert_equals(point, expected_point)
 
     def _find_in_rss(self, path):
         url = toolkit.url_for('mapaction_georss')

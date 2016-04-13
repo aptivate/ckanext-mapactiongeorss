@@ -7,10 +7,17 @@ class MapActionGeoRssFeedController(FeedController):
         return GeoAtom1Feed(title, link, description, **kwargs)
 
     def get_item_extras(self, package):
+        names = ('ymin', 'xmin', 'ymax', 'xmax')
+
         extras = {e['key']: e['value'] for e in package['extras']}
+        coords = {n: float(extras.get(n, 0)) for n in names}
 
-        box = tuple(float(extras.get(n, '0'))
-                    for n in ('ymin', 'xmin', 'ymax', 'xmax'))
-        extras = {'geometry': box}
+        box = tuple(v for (_, v) in coords.items())
 
-        return extras
+        y = (coords['ymin'] + coords['ymax']) / 2
+        x = (coords['xmin'] + coords['xmax']) / 2
+
+        point = (y, x)
+
+        return {'geometry': box,
+                'geometry': point}

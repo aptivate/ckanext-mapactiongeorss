@@ -1,9 +1,12 @@
 from webhelpers.feedgenerator import GeoAtom1Feed, rfc3339_date
+
+from ckan.common import _
 from ckan.controllers.feed import FeedController
 
 
 class MapActionGeoRssFeedController(FeedController):
     def create_feed(self, title, link, description, **kwargs):
+        title = _('MapAction GeoRSS Feed')
         return MapActionFeed(title, link, description, **kwargs)
 
     def get_item_extras(self, package):

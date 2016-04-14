@@ -14,10 +14,37 @@ assert_regexp_matches = nose.tools.assert_regexp_matches
 
 
 class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
+    def find_in_rss(self, path):
+        url = self.get_url()
+        response = self.app.get(url, status=[200])
+
+        et = fromstring(response.body)
+        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',
+                      'georss': 'http://www.georss.org/georss'}
+
+        elements = et.find(path, namespaces=namespaces)
+
+        assert_true(elements is not None,
+                    "Couldn't find elements matching path {0} in feed".format(
+                        path))
+
+        return elements
+
+    def convert_date(self, date):
+        return rfc3339_date(h.date_str_to_datetime(date)).decode('utf-8')
+
+    def get_url(self):
+        raise NotImplementedError
+
+
+class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssFeedController):
+    def get_url(self):
+        return toolkit.url_for('mapaction_georss_dataset')
+
     def test_feed_contains_dataset(self):
         dataset = factories.Dataset()
 
-        title = self._find_in_rss('xmlns:entry/xmlns:title').text
+        title = self.find_in_rss('xmlns:entry/xmlns:title').text
 
         assert_equals(title, dataset['title'])
 
@@ -36,7 +63,7 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
 
         factories.Dataset(extras=extras)
 
-        box = self._find_in_rss('xmlns:entry/georss:box').text
+        box = self.find_in_rss('xmlns:entry/georss:box').text
 
         expected_values = {k: float(metadata[k])
                            for (k, v) in metadata.items()}
@@ -49,34 +76,34 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
     def test_feed_contains_updated(self):
         dataset = factories.Dataset()
 
-        updated = self._find_in_rss('xmlns:entry/xmlns:updated').text
+        updated = self.find_in_rss('xmlns:entry/xmlns:updated').text
 
-        expected_updated = self._convert_date(dataset['metadata_modified'])
+        expected_updated = self.convert_date(dataset['metadata_modified'])
         assert_equals(updated, expected_updated)
 
     def test_feed_contains_published(self):
         dataset = factories.Dataset()
 
-        published = self._find_in_rss('xmlns:entry/xmlns:published').text
+        published = self.find_in_rss('xmlns:entry/xmlns:published').text
 
-        expected_published = self._convert_date(dataset['metadata_created'])
+        expected_published = self.convert_date(dataset['metadata_created'])
         assert_equals(published, expected_published)
 
-    def _convert_date(self, date):
-        return rfc3339_date(h.date_str_to_datetime(date)).decode('utf-8')
+    def test_main_feed_title_is_mapaction_georss(self):
+        title = self.find_in_rss('xmlns:title').text
 
-    def _find_in_rss(self, path):
-        url = toolkit.url_for('mapaction_georss')
-        response = self.app.get(url, status=[200])
+        assert_equals(title, 'MapAction GeoRSS Feed')
 
-        et = fromstring(response.body)
-        namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',
-                      'georss': 'http://www.georss.org/georss'}
 
-        elements = et.find(path, namespaces=namespaces)
+class TestMapActionGeoRssCustomFeed(TestMapActionGeoRssFeedController):
+    event_name = '00189'
 
-        assert_true(elements is not None,
-                    "Couldn't find elements matching path {0} in feed".format(
-                        path))
+    def get_url(self):
+        return '{0}?groups={1}'.format(
+            toolkit.url_for('mapaction_georss_event'),
+            self.event_name)
 
-        return elements
+    def test_custom_title_is_mapaction_georss(self):
+        title = self.find_in_rss('xmlns:title').text
+
+        assert_equals(title, 'MapAction GeoRSS Feed')

@@ -17,13 +17,13 @@ class MapactiongeorssPlugin(plugins.SingletonPlugin):
 
     def before_map(self, map):
         map.connect(
-            'mapaction_georss',
+            'mapaction_georss_dataset',
             '/feeds/dataset.atom',
             controller='ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController',
             action='general')
 
         map.connect(
-            'mapaction_georss',
+            'mapaction_georss_event',
             '/feeds/custom.atom',
             controller='ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController',
             action='custom')

@@ -1,6 +1,8 @@
 from defusedxml.ElementTree import fromstring
+from webhelpers.feedgenerator import rfc3339_date
 import nose.tools
 
+import ckan.lib.helpers as h
 import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
 
@@ -12,8 +14,6 @@ assert_regexp_matches = nose.tools.assert_regexp_matches
 
 
 class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
-    controller = 'ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController'
-
     def test_feed_contains_dataset(self):
         dataset = factories.Dataset()
 
@@ -46,6 +46,17 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
 
         assert_equals(box, expected_box)
 
+    def test_feed_contains_updated(self):
+        dataset = factories.Dataset()
+
+        updated = self._find_in_rss('xmlns:entry/xmlns:updated').text
+
+        expected_updated = self._convert_date(dataset['metadata_modified'])
+        assert_equals(updated, expected_updated)
+
+    def _convert_date(self, date):
+        return rfc3339_date(h.date_str_to_datetime(date)).decode('utf-8')
+
     def _find_in_rss(self, path):
         url = toolkit.url_for('mapaction_georss')
         response = self.app.get(url, status=[200])
@@ -54,4 +65,10 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
         namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',
                       'georss': 'http://www.georss.org/georss'}
 
-        return et.find(path, namespaces=namespaces)
+        elements = et.find(path, namespaces=namespaces)
+
+        assert_true(elements is not None,
+                    "Couldn't find elements matching path {0} in feed".format(
+                        path))
+
+        return elements

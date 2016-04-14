@@ -24,8 +24,15 @@ class MapActionFeed(GeoAtom1Feed):
         """
         super(MapActionFeed, self).add_item_elements(handler, item)
 
-        dfunc = rfc3339_date
-
         if (item['updated']):
-            handler.addQuickElement(u'updated',
-                                    dfunc(item['updated']).decode('utf-8'))
+            handler.addQuickElement(
+                u'updated',
+                self._convert_date(item['updated']).decode('utf-8'))
+
+        if(item['published']):
+            handler.addQuickElement(
+                u'published',
+                self._convert_date(item['published']).decode('utf-8'))
+
+    def _convert_date(self, date):
+        return rfc3339_date(date).decode('utf-8')

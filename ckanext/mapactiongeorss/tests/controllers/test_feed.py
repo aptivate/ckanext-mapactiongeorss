@@ -54,6 +54,14 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
         expected_updated = self._convert_date(dataset['metadata_modified'])
         assert_equals(updated, expected_updated)
 
+    def test_feed_contains_published(self):
+        dataset = factories.Dataset()
+
+        published = self._find_in_rss('xmlns:entry/xmlns:published').text
+
+        expected_published = self._convert_date(dataset['metadata_created'])
+        assert_equals(published, expected_published)
+
     def _convert_date(self, date):
         return rfc3339_date(h.date_str_to_datetime(date)).decode('utf-8')
 

@@ -22,4 +22,10 @@ class MapactiongeorssPlugin(plugins.SingletonPlugin):
             controller='ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController',
             action='general')
 
+        map.connect(
+            'mapaction_georss',
+            '/feeds/custom.atom',
+            controller='ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController',
+            action='custom')
+
         return map

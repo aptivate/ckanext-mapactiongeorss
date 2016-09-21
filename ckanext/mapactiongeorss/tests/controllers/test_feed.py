@@ -3,7 +3,6 @@ from webhelpers.feedgenerator import rfc3339_date
 import nose.tools
 
 import ckan.lib.helpers as h
-import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
 
 import ckanext.mapactiongeorss.tests.helpers as helpers
@@ -13,7 +12,7 @@ assert_true = nose.tools.assert_true
 assert_regexp_matches = nose.tools.assert_regexp_matches
 
 
-class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
+class TestMapActionGeoRssBase(helpers.FunctionalTestBaseClass):
     def find_in_rss(self, path):
         url = self.get_url()
         app = self._get_test_app()
@@ -38,9 +37,9 @@ class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
         raise NotImplementedError
 
 
-class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssFeedController):
+class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssBase):
     def get_url(self):
-        return toolkit.url_for('mapaction_georss_dataset')
+        return '/feeds/dataset.atom'
 
     def test_feed_contains_dataset(self):
         dataset = factories.Dataset()
@@ -96,12 +95,11 @@ class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssFeedController):
         assert_equals(title, 'MapAction GeoRSS Feed')
 
 
-class TestMapActionGeoRssCustomFeed(TestMapActionGeoRssFeedController):
+class TestMapActionGeoRssCustomFeed(TestMapActionGeoRssBase):
     event_name = '00189'
 
     def get_url(self):
-        return '{0}?groups={1}'.format(
-            toolkit.url_for('mapaction_georss_event'),
+        return '/feeds/custom.atom?groups={0}'.format(
             self.event_name)
 
     def test_custom_title_is_mapaction_georss(self):

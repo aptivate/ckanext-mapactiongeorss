@@ -1,31 +1,57 @@
-from routes.mapper import SubMapper
+from webhelpers.feedgenerator import GeoAtom1Feed, rfc3339_date
 
+from ckan.common import _
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 
 class MapactiongeorssPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IRoutes, inherit=True)
+    plugins.implements(plugins.IFeed)
 
     # IConfigurer
-
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'mapactiongeorss')
 
-    def before_map(self, map):
-        map.connect(
-            'mapaction_georss_dataset',
-            '/feeds/dataset.atom',
-            controller='ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController',
-            action='general')
+    # IFeed
+    def get_feed_class(self):
+        return MapActionFeed
 
-        map.connect(
-            'mapaction_georss_event',
-            '/feeds/custom.atom',
-            controller='ckanext.mapactiongeorss.controllers.feed:MapActionGeoRssFeedController',
-            action='custom')
+    def get_item_additional_fields(self, package):
+        extras = {e['key']: e['value'] for e in package['extras']}
 
-        return map
+        box = tuple(float(extras.get(n, '0'))
+                    for n in ('ymin', 'xmin', 'ymax', 'xmax'))
+        return {'geometry': box}
+
+
+class MapActionFeed(GeoAtom1Feed):
+    def __init__(self, title, link, description, **kwargs):
+        super(MapActionFeed, self).__init__(
+            _('MapAction GeoRSS Feed'),
+            link,
+            description,
+            **kwargs
+        )
+
+    def add_item_elements(self, handler, item):
+        """
+        Add the <updated> and <published> fields to each entry that's written
+        to the handler.
+        """
+        super(MapActionFeed, self).add_item_elements(handler, item)
+
+        if (item['updated']):
+            handler.addQuickElement(
+                u'updated',
+                self._convert_date(item['updated']).decode('utf-8'))
+
+        if(item['published']):
+            handler.addQuickElement(
+                u'published',
+                self._convert_date(item['published']).decode('utf-8'))
+
+    def _convert_date(self, date):
+        return rfc3339_date(date).decode('utf-8')

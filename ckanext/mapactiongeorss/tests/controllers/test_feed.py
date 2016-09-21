@@ -16,7 +16,8 @@ assert_regexp_matches = nose.tools.assert_regexp_matches
 class TestMapActionGeoRssFeedController(helpers.FunctionalTestBaseClass):
     def find_in_rss(self, path):
         url = self.get_url()
-        response = self.app.get(url, status=[200])
+        app = self._get_test_app()
+        response = app.get(url, status=[200])
 
         et = fromstring(response.body)
         namespaces = {'xmlns': 'http://www.w3.org/2005/Atom',

@@ -10,7 +10,7 @@ sudo apt-get install postgresql-$PGVERSION solr-jetty libcommons-fileupload-java
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/aptivate/ckan
 cd ckan
-export ckan_branch=mapaction-dev
+export ckan_branch=ckan-2.5.4-mapaction
 echo "CKAN branch: $ckan_branch"
 git checkout $ckan_branch
 python setup.py develop

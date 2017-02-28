@@ -8,6 +8,7 @@ import ckan.plugins.toolkit as toolkit
 class MapactiongeorssPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IFeed)
+    plugins.implements(plugins.IRoutes, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -25,6 +26,22 @@ class MapactiongeorssPlugin(plugins.SingletonPlugin):
         box = tuple(float(extras.get(n, '0'))
                     for n in ('ymin', 'xmin', 'ymax', 'xmax'))
         return {'geometry': box}
+
+    # IRoutes
+    def before_map(self, map):
+        map.connect(
+            'mapaction_georss_dataset',
+            '/feeds/dataset.atom',
+            controller='feed',
+            action='general')
+
+        map.connect(
+            'mapaction_georss_event',
+            '/feeds/custom.atom',
+            controller='feed',
+            action='custom')
+
+        return map
 
 
 class MapActionFeed(GeoAtom1Feed):

@@ -3,6 +3,7 @@ from webhelpers.feedgenerator import rfc3339_date
 import nose.tools
 
 import ckan.lib.helpers as h
+import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
 
 import ckanext.mapactiongeorss.tests.helpers as helpers
@@ -39,7 +40,7 @@ class TestMapActionGeoRssBase(helpers.FunctionalTestBaseClass):
 
 class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssBase):
     def get_url(self):
-        return '/feeds/dataset.atom'
+        return toolkit.url_for('mapaction_georss_dataset')
 
     def test_feed_contains_dataset(self):
         dataset = factories.Dataset()
@@ -99,7 +100,8 @@ class TestMapActionGeoRssCustomFeed(TestMapActionGeoRssBase):
     event_name = '00189'
 
     def get_url(self):
-        return '/feeds/custom.atom?groups={0}'.format(
+        return '{0}?groups={1}'.format(
+            toolkit.url_for('mapaction_georss_event'),
             self.event_name)
 
     def test_custom_title_is_mapaction_georss(self):

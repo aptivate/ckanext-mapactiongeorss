@@ -7,6 +7,7 @@ import ckan.plugins.toolkit as toolkit
 import ckan.tests.factories as factories
 
 import ckanext.mapactiongeorss.tests.helpers as helpers
+import ckanext.mapactiongeorss.tests.factories as custom_factories
 
 assert_equals = nose.tools.assert_equals
 assert_true = nose.tools.assert_true
@@ -49,7 +50,8 @@ class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssBase):
 
         assert_equals(title, dataset['title'])
 
-    def test_feed_contains_coordinates(self):
+    def test_feed_contains_coordinates_from_extras(self):
+        """ Test returning geometry defined by extras """
         metadata = {
             'ymin': '-2373790',
             'xmin': '2937940',
@@ -73,6 +75,31 @@ class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssBase):
             **expected_values)
 
         assert_equals(box, expected_box)
+
+
+    def test_feed_contains_coordinates_from_fields(self):
+        """ Test returning geometry defined by fields """
+        metadata = {
+            'ymin': '-10.0',
+            'xmin': '-10.0',
+            'ymax': '10.0',
+            'xmax': '10.0',
+        }
+
+        custom_factories.Dataset(
+            **metadata
+        )
+
+        box = self.find_in_rss('xmlns:entry/georss:box').text
+
+        expected_values = {k: float(metadata[k])
+                           for (k, v) in metadata.items()}
+
+        expected_box = '{ymin:f} {xmin:f} {ymax:f} {xmax:f}'.format(
+            **expected_values)
+
+        assert_equals(box, expected_box)
+
 
     def test_feed_contains_updated(self):
         dataset = factories.Dataset()

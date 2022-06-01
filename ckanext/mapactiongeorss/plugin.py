@@ -21,10 +21,19 @@ class MapactiongeorssPlugin(plugins.SingletonPlugin):
         return MapActionFeed
 
     def get_item_additional_fields(self, package):
-        extras = {e['key']: e['value'] for e in package['extras']}
+        """ Get the geometry from either extras (for legacy datasets) or dataset
+        fields """
+        geometry_fields = ('ymin', 'xmin', 'ymax', 'xmax')
+        if all(o in package for o in geometry_fields):
+            geometry_source = package
+        else:
+            # look for geometry in extras
+            geometry_source = {e['key']: e['value'] for e in package['extras']}
 
-        box = tuple(float(extras.get(n, '0'))
-                    for n in ('ymin', 'xmin', 'ymax', 'xmax'))
+        box = tuple(
+            float(geometry_source.get(n, '0'))
+            for n in geometry_fields
+        )
         return {'geometry': box}
 
     # IRoutes

@@ -24,11 +24,16 @@ class MapactiongeorssPlugin(plugins.SingletonPlugin):
         """ Get the geometry from either extras (for legacy datasets) or dataset
         fields """
         geometry_fields = ('ymin', 'xmin', 'ymax', 'xmax')
+        geometry_source = {}
+
         if all(o in package for o in geometry_fields):
             geometry_source = package
         else:
-            # look for geometry in extras
-            geometry_source = {e['key']: e['value'] for e in package['extras']}
+            try:
+                # look for geometry in extras
+                geometry_source = {e['key']: e['value'] for e in package['extras']}
+            except KeyError:
+                pass
 
         box = tuple(
             float(geometry_source.get(n, '0'))

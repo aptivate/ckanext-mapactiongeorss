@@ -9,6 +9,8 @@ import ckan.tests.factories as factories
 import ckanext.mapactiongeorss.tests.helpers as helpers
 import ckanext.mapactiongeorss.tests.factories as custom_factories
 
+from ckanext.mapactionimporter.plugin import create_product_themes
+
 assert_equals = nose.tools.assert_equals
 assert_true = nose.tools.assert_true
 assert_regexp_matches = nose.tools.assert_regexp_matches
@@ -114,6 +116,14 @@ class TestMapActionGeoRssDatasetFeed(TestMapActionGeoRssBase):
 
         published = self.find_in_rss('xmlns:entry/xmlns:published').text
 
+        expected_published = self.convert_date(dataset['metadata_created'])
+        assert_equals(published, expected_published)
+
+    def test_feed_handles_default_schema_without_extras(self):
+        create_product_themes()
+        dataset = custom_factories.DefaultDataset(product_themes=['Agriculture'])
+
+        published = self.find_in_rss('xmlns:entry/xmlns:published').text
         expected_published = self.convert_date(dataset['metadata_created'])
         assert_equals(published, expected_published)
 
